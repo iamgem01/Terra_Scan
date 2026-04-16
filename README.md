@@ -1,4 +1,4 @@
-# Terra_Scan
+# Terra_Scan: IOT mini project
  Robot thám hiểm thông minh. Khối Phần cứng : xây dựng mô hình 
 • Chức năng: Thu thập dữ liệu (Siêu âm, DHT11, Ánh sáng) và thực thi lệnh cho động cơ
 • IoT: Đóng gói dữ liệu thô gửi lên Cloud qua Wifi; không xử lý thuật toán nặng 
