@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "author": "EzRover Pro",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-v1", "id": "esp32", "top": 0, "left": 0, "attrs": {} },
+
+    { "type": "wokwi-hc-sr04", "id": "sonar", "top": -120, "left": 200, "attrs": { "distance": "50" } },
+    { "type": "wokwi-servo",    "id": "servo",  "top": -120, "left": 380, "attrs": {} },
+
+    { "type": "wokwi-lcd1602",  "id": "lcd",    "top": 160,  "left": -200, "attrs": { "pins": "i2c", "address": "0x27" } },
+
+    { "type": "wokwi-pushbutton", "id": "encL", "top": 260, "left": 220, "attrs": { "color": "green", "label": "EncL" } },
+    { "type": "wokwi-pushbutton", "id": "encR", "top": 260, "left": 320, "attrs": { "color": "blue",  "label": "EncR" } }
+  ],
+  "connections": [
+    ["esp32:GND.1",  "lcd:GND",  "black",  []],
+    ["esp32:5V",     "lcd:VCC",  "red",    []],
+    ["esp32:D21",    "lcd:SDA",  "green",  []],
+    ["esp32:D22",    "lcd:SCL",  "yellow", []],
+
+    ["esp32:GND.2",  "sonar:GND",  "black",  []],
+    ["esp32:5V",     "sonar:VCC",  "red",    []],
+    ["esp32:D33",    "sonar:TRIG", "orange", []],
+    ["esp32:D18",    "sonar:ECHO", "purple", []],
+
+    ["esp32:D19",    "servo:PWM",  "orange", []],
+    ["esp32:GND.3",  "servo:GND",  "black",  []],
+    ["esp32:5V",     "servo:V+",   "red",    []],
+
+    ["esp32:D34",    "encL:1.l",   "green",  []],
+    ["esp32:GND.4",  "encL:2.l",   "black",  []],
+
+    ["esp32:D35",    "encR:1.l",   "blue",   []],
+    ["esp32:GND.5",  "encR:2.l",   "black",  []]
+  ],
+  "dependencies": {}
+}

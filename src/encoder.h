@@ -8,23 +8,20 @@
 // ║  Dùng interrupt RISING để đếm xung                         ║
 // ╚══════════════════════════════════════════════════════════════╝
 
-// ─── Biến chia sẻ với ISR (phải volatile) ────────────────────
-static volatile long  _tickL     = 0;
-static volatile long  _tickR     = 0;
-static volatile int8_t _dirL     = 0;   // +1 tiến / -1 lùi / 0 dừng
-static volatile int8_t _dirR     = 0;
-static volatile unsigned long _chgL = 0; // millis() lúc đổi hướng
-static volatile unsigned long _chgR = 0;
+// ─── Biến chia sẻ với ISR — defined in encoder.cpp (one copy) ─
+// static keyword removed: each TU including this header would get
+// its own copy, causing ISR and setDirection() to update different
+// variables → encoder ticks always 0.
+extern volatile long           _tickL;
+extern volatile long           _tickR;
+extern volatile int8_t         _dirL;    // +1 tiến / -1 lùi / 0 dừng
+extern volatile int8_t         _dirR;
+extern volatile unsigned long  _chgL;   // millis() lúc đổi hướng
+extern volatile unsigned long  _chgR;
 
-// ─── ISR — chạy trực tiếp trong interrupt ────────────────────
-static void IRAM_ATTR isr_encL() {
-    if ((millis() - _chgL) < SETTLE_MS) return; // bỏ qua quán tính
-    if (_dirL != 0) _tickL += _dirL;
-}
-static void IRAM_ATTR isr_encR() {
-    if ((millis() - _chgR) < SETTLE_MS) return;
-    if (_dirR != 0) _tickR += _dirR;
-}
+// ─── ISR — defined in encoder.cpp ────────────────────────────
+void IRAM_ATTR isr_encL();
+void IRAM_ATTR isr_encR();
 
 // ─── Encoder Manager ─────────────────────────────────────────
 class EncoderManager {

@@ -76,6 +76,7 @@ void setup() {
 void loop() {
     http.handleClient();
     wss.loop();
+    checkServoAutoDetach();
 
     const uint32_t now = millis();
 
@@ -95,55 +96,66 @@ void loop() {
         }
     }
 
+    // ── Control loop 50Hz: đọc encoder → cập nhật pose → dispatch mode ──
     if (now - tCtrl >= LOOP_CONTROL_MS) {
         tCtrl = now;
 
-        enc.update();
+        enc.update();              // Tính tốc độ bánh từ tick encoder
         int dL = 0;
         int dR = 0;
-        enc.getAndResetDelta(dL, dR);
+        enc.getAndResetDelta(dL, dR); // Lấy delta tick cho odometry
 
-        pose.update(dL, dR);
+        pose.update(dL, dR);      // Cập nhật (x, y, θ) theo dead-reckoning
 
         switch (mode) {
             case MANUAL:
+                // cmdL/cmdR được set bởi ws_handlers khi nhận lệnh "drive"
                 driveRaw(cmdL, cmdR);
                 break;
             case AVOID:
+                // State machine tránh vật cản — không blocking
                 doAvoid();
                 break;
             case GOTO:
+                // Điều hướng đến (targetX, targetY) — trả true khi đến nơi
                 if (nav.tick(pose.pose)) {
                     mode = MANUAL;
                     broadcastTelemetry("arrived");
                 }
                 break;
             case SCAN:
+                // Đứng yên — chờ lệnh từ web
                 break;
         }
     }
 
+    // ── Sonar fullScan 0.4Hz: chỉ chạy khi AVOID hoặc GOTO ──────────
+    // fullScan() blocking ~1.2s — doAvoid() dùng cờ last.fresh để biết khi nào xong
     if ((mode == AVOID || mode == GOTO) && (now - tScan >= LOOP_SCAN_MS)) {
         tScan = now;
-        stopMotors();
-        sonar.fullScan();
-        broadcastScan();
+        stopMotors();        // Dừng trước khi quét để tránh rung
+        sonar.fullScan();    // Quét 7 góc (0°→180°), ~1.2s
+        broadcastScan();     // Gửi kết quả về Web UI
     }
 
+    // ── Telemetry 10Hz: gửi vị trí + tốc độ + mode qua WebSocket ────
     if (now - tTele >= LOOP_TELEMETRY_MS) {
         tTele = now;
         broadcastTelemetry("update");
     }
 
+    // ── Log chẩn đoán 1Hz: in trạng thái ra Serial Monitor ──────────
     if (now - tDiag >= 1000) {
         tDiag = now;
         logRuntimeDiag();
     }
 
+    // ── LCD refresh 2Hz: hiển thị mode, tốc độ, góc, IP ─────────────
     if (now - tDisp >= LOOP_DISPLAY_MS) {
         tDisp = now;
         const float avgSpd = (enc.speedL_cms + enc.speedR_cms) * 0.5f;
         const char* mstr = modeStr();
+        // Dùng STA IP nếu đã kết nối, ngược lại dùng AP IP
         String ip = (WiFi.status() == WL_CONNECTED)
                         ? WiFi.localIP().toString()
                         : WiFi.softAPIP().toString();

@@ -19,11 +19,10 @@
 enum AvoidState {
     AV_CHECK,       // Kiểm tra có vật cản không
     AV_STOPPING,    // Đang dừng lại (ngắn)
-    AV_WAIT_SCAN,   // Chờ fullScan() (vẫn blocking nhưng chỉ 1 lần)
+    AV_WAIT_SCAN,   // Chờ scan từ main loop (non-blocking)
     AV_REVERSING,   // Lùi nếu cần
     AV_TURNING,     // Quay tránh vật cản
     AV_SETTLE,      // Dừng ngắn sau khi quay
-    AV_FORWARD      // Đi thẳng khi đường trống
 };
 
 static AvoidState avState = AV_CHECK;
@@ -42,36 +41,43 @@ void doAvoid() {
                 avState = AV_STOPPING;
                 avTimer = now;
             } else {
-                // Đường trống → đi thẳng ngay, không cần state change
                 driveRaw(SPEED_DEFAULT, SPEED_DEFAULT);
+                enc.setDirection(SPEED_DEFAULT, SPEED_DEFAULT);
             }
             break;
 
         case AV_STOPPING:
-            // *** FIX: thay delay(150) → đợi 150ms qua timer
             if (now - avTimer >= 150) {
-                // *** Gọi fullScan() — vẫn blocking ~1.2s (đã fix ở sonar.h)
-                //     Đây là blocking duy nhất còn lại, không thể tránh hoàn toàn
-                //     vì HC-SR04 cần thời gian thực để đo
-                sonar.fullScan();
-                broadcastScan();
+                // Clear fresh flag — wait for main loop's LOOP_SCAN_MS to fire
+                // a real scan. Avoids the 1.2s blocking fullScan() inside doAvoid().
+                sonar.last.fresh = false;
+                avState = AV_WAIT_SCAN;
+                avTimer = now;
+            }
+            break;
 
-                // Tính hướng quay ngay sau scan
+        case AV_WAIT_SCAN:
+            // main loop calls sonar.fullScan() + broadcastScan() every LOOP_SCAN_MS
+            // when mode == AVOID. Wait for that scan to complete.
+            if (sonar.last.fresh) {
+                sonar.last.fresh = false;  // consume
                 int turn = sonar.turnAngleDeg();
                 if (abs(turn) < 15) {
-                    // Bí hoàn toàn → lùi
                     driveRaw(-SPEED_TURN, -SPEED_TURN);
+                    enc.setDirection(-SPEED_TURN, -SPEED_TURN);
                     avState = AV_REVERSING;
                     avTimer = now;
                     avTurnDir = 0;
                 } else {
-                    // Có hướng thoát → quay ngay
                     avTurnMs = map(abs(turn), 0, 90, 0, 500);
                     avTurnDir = (turn > 0) ? 1 : -1;
-                    if (avTurnDir > 0)
-                        driveRaw(-SPEED_TURN, SPEED_TURN);  // quay trái
-                    else
-                        driveRaw(SPEED_TURN, -SPEED_TURN);  // quay phải
+                    if (avTurnDir > 0) {
+                        driveRaw(-SPEED_TURN, SPEED_TURN);
+                        enc.setDirection(-SPEED_TURN, SPEED_TURN);
+                    } else {
+                        driveRaw(SPEED_TURN, -SPEED_TURN);
+                        enc.setDirection(SPEED_TURN, -SPEED_TURN);
+                    }
                     avState = AV_TURNING;
                     avTimer = now;
                 }
@@ -79,17 +85,18 @@ void doAvoid() {
             break;
 
         case AV_REVERSING:
-            // *** FIX: thay delay(300) → đợi 300ms qua timer
             if (now - avTimer >= 300) {
                 stopMotors();
-                // Sau khi lùi, tính lại hướng từ scan vừa xong
                 int turn = sonar.turnAngleDeg();
                 avTurnMs = map(abs(turn), 0, 90, 150, 500);
                 avTurnDir = (turn >= 0) ? 1 : -1;
-                if (avTurnDir > 0)
+                if (avTurnDir > 0) {
                     driveRaw(-SPEED_TURN, SPEED_TURN);
-                else
+                    enc.setDirection(-SPEED_TURN, SPEED_TURN);
+                } else {
                     driveRaw(SPEED_TURN, -SPEED_TURN);
+                    enc.setDirection(SPEED_TURN, -SPEED_TURN);
+                }
                 avState = AV_TURNING;
                 avTimer = now;
             }
