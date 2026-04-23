@@ -42,20 +42,19 @@
 
 // ════════════════════════════════════════════════════════════════
 //  I2C BUS — dùng chung SDA=21, SCL=22
-//  LCD (0x27) + MPU6050 (0x68) trên cùng 1 bus
+//  LCD (0x27) trên cùng bus
 // ════════════════════════════════════════════════════════════════
 #define I2C_SDA         21    // ← sơ đồ của bạn
 #define I2C_SCL         22    // ← sơ đồ của bạn
 #define LCD_I2C_ADDR    0x27  // LCD 16×2 với PCF8574
-#define MPU_I2C_ADDR    0x68  // MPU6050 (AD0=GND)
 
 // ════════════════════════════════════════════════════════════════
 //  TỐC ĐỘ & PID
 // ════════════════════════════════════════════════════════════════
-#define SPEED_MAX       220   // PWM tối đa (tránh quá nóng L298N)
-#define SPEED_DEFAULT   160   // Tốc độ mặc định di chuyển
-#define SPEED_TURN      120   // Tốc độ khi quay
-#define SPEED_DEADZONE  75    // PWM tối thiểu để bánh quay được
+#define SPEED_MAX       240   // PWM tối đa (tránh quá nóng L298N)
+#define SPEED_DEFAULT   200   // Tốc độ mặc định di chuyển
+#define SPEED_TURN      170   // Tốc độ khi quay
+#define SPEED_DEADZONE  95    // PWM tối thiểu để bánh quay được
 
 // PID Gains cho speed controller (hiệu chỉnh theo thực tế)
 #define PID_KP          2.5f
@@ -65,7 +64,6 @@
 // ════════════════════════════════════════════════════════════════
 //  POSE ESTIMATION
 // ════════════════════════════════════════════════════════════════
-#define IMU_WEIGHT      0.30f // Trọng số MPU6050 trong fusion (0–1)
 #define GOAL_RADIUS_CM  6.0f  // Bán kính "đã đến đích"
 #define HEADING_KP      90.0f // Hệ số nhạy lái (heading correction)
 

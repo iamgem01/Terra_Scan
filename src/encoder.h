@@ -17,11 +17,11 @@ static volatile unsigned long _chgL = 0; // millis() lúc đổi hướng
 static volatile unsigned long _chgR = 0;
 
 // ─── ISR — chạy trực tiếp trong interrupt ────────────────────
-void IRAM_ATTR isr_encL() {
+static void IRAM_ATTR isr_encL() {
     if ((millis() - _chgL) < SETTLE_MS) return; // bỏ qua quán tính
     if (_dirL != 0) _tickL += _dirL;
 }
-void IRAM_ATTR isr_encR() {
+static void IRAM_ATTR isr_encR() {
     if ((millis() - _chgR) < SETTLE_MS) return;
     if (_dirR != 0) _tickR += _dirR;
 }

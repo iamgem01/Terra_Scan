@@ -91,8 +91,8 @@ input[type=range]{width:100%;margin-top:4px;accent-color:#1f6feb;cursor:pointer}
       <div></div>
     </div>
     <div class="slider-wrap">
-      <label>Tốc độ <span id="spdVal">160</span></label>
-      <input type="range" id="spdSlider" min="80" max="220" value="160"
+      <label>Tốc độ <span id="spdVal">200</span></label>
+      <input type="range" id="spdSlider" min="100" max="240" value="200"
              oninput="document.getElementById('spdVal').textContent=this.value">
     </div>
     <div class="servo-wrap">

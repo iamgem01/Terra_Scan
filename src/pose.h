@@ -5,7 +5,7 @@
 
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  src/pose.h — Pose Estimation                               ║
-// ║  Dead-reckoning encoder + MPU6050 yaw fusion                ║
+// ║  Dead-reckoning encoder                                      ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 struct Pose {
@@ -20,26 +20,14 @@ public:
 
     // Gọi mỗi control loop (20ms)
     // deltaL, deltaR : encoder ticks từ lần trước
-    // imuYawDeg      : góc yaw tích lũy từ MPU6050 (độ)
-    void update(int deltaL, int deltaR, float imuYawDeg) {
+    void update(int deltaL, int deltaR) {
         const float mmPerTick = (PI * WHEEL_DIAM_MM) / TICKS_PER_REV;
         float dL = deltaL * mmPerTick;
         float dR = deltaR * mmPerTick;
         float dc = (dL + dR) * 0.5f;        // mm đi được trung tâm
 
         // Góc thay đổi theo encoder (dead-reckoning)
-        float dTheta_enc = (dR - dL) / WHEEL_BASE_MM;
-
-        // Góc thay đổi theo IMU
-        float imuRad    = imuYawDeg * DEG_TO_RAD;
-        float dTheta_imu = imuRad - pose.theta;
-        // Chuẩn hoá [-π, π]
-        while (dTheta_imu >  PI) dTheta_imu -= TWO_PI;
-        while (dTheta_imu < -PI) dTheta_imu += TWO_PI;
-
-        // Sensor fusion: encoder tốt với khoảng cách, IMU tốt với góc quay
-        float dTheta = (1.0f - IMU_WEIGHT) * dTheta_enc
-                      +        IMU_WEIGHT  * dTheta_imu;
+        float dTheta = (dR - dL) / WHEEL_BASE_MM;
 
         pose.theta += dTheta;
         while (pose.theta >  PI) pose.theta -= TWO_PI;
