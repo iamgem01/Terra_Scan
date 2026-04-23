@@ -35,6 +35,8 @@ extern uint32_t tDiag;
 void handleHttpStatus();
 void onWsEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t len);
 void doAvoid();
+void resetAvoidState();          // *** NEW: reset AVOID state machine
+void checkServoAutoDetach();     // *** NEW: gọi từ loop() để auto-detach servo
 void broadcastTelemetry(const char* event);
 void broadcastScan();
 const char* modeStr();
