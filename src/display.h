@@ -17,7 +17,7 @@ public:
         lcd.init();
         lcd.backlight();
         show("EzRover Pro", "Starting...");
-        delay(1000);
+        delay(100); // FIX: giảm từ 1000ms → 100ms
     }
 
     void show(const char* l1, const char* l2 = "                ") {

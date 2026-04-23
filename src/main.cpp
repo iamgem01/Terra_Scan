@@ -38,8 +38,9 @@ void setup() {
     Serial.printf("[WiFi] Attempting to connect to SSID: %s\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASS);
 
+    // FIX: giảm timeout từ 30s (60×500ms) → 10s (20×500ms)
     uint8_t tries = 0;
-    while (WiFi.status() != WL_CONNECTED && tries < 60) {
+    while (WiFi.status() != WL_CONNECTED && tries < 20) {
         delay(500);
         Serial.print('.');
         tries++;
@@ -55,7 +56,7 @@ void setup() {
     }
 
     lcd.showIP(ip);
-    delay(2000);
+    delay(500); // FIX: giảm từ 2000ms → 500ms
 
     http.on("/", []() {
         http.send_P(200, "text/html", HTML_PAGE);
